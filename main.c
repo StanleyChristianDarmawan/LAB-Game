@@ -3,6 +3,9 @@
 #include <time.h>
 #include <string.h>
 
+// Nathanael Mahardika Susilo - 2702260382
+// Stanley Christian Darmawan - 2702243174
+
 struct Player{
 	char name[10];
 	int hp;
@@ -17,16 +20,46 @@ struct Monster{
 	int spd;
 };
 
-int randomNum(int min, int max) {
+struct Score{
+    char playerName[20];
+    float score;
+};
+
+int randomNum(int min, int max){
     return rand() % (max - min + 1) + min;
 }
 
-int playerAttack(int playerAttackPower) {
+int playerAttack(int playerAttackPower){
     return randomNum(playerAttackPower - 5, playerAttackPower + 5);
 }
 
-int enemyAttack(int enemyAttackPower) {
+int enemyAttack(int enemyAttackPower){
     return randomNum(enemyAttackPower - 3, enemyAttackPower + 3);
+}
+
+void saveScores(char playerName[], float score) {
+    FILE *file = fopen("highscores.txt", "a");
+    
+	int i;
+    
+    if(!file){
+        fprintf(stderr, "Error opening highscores.txt\n");
+        exit(EXIT_FAILURE);
+    }
+	
+    fprintf(file, "%s %.1f\n", playerName, score);
+
+    fclose(file);
+}
+
+int scoring(int leftoverHealth, int turns){
+	char playerName[20];
+	float score = leftoverHealth + (100-(5*turns));
+	
+	printf("\nYour score is: %.1f\n", score);
+	printf("Enter your name: "); scanf("%s", playerName);
+	saveScores(playerName, score);
+	
 }
 
 void monsterTurn(char name[], int *playerHP, int *playerAtk, int *enemyHP, int *enemyAtk) {
@@ -87,13 +120,28 @@ void battle(char player[], char enemy[], int *playerHP, int *playerAtk, int *ene
             	*playerHP += playerHeal;
             	break;
 		}
-
+		
+		char choice;
+		int leftover;
+		
         if (*enemyHP <= 0) {
-            printf("%s defeated! You win!\n", enemy);
-            break;
+            printf("%s defeated! You win!\n\n", enemy);
+            leftover = *playerHP;
+            
+            end:
+            printf("Do you want to save your score? [Y/N]\n"); 
+			printf("Your choice:"); scanf(" %c", &choice);
+			if(choice=='Y' || choice=='y'){
+				scoring(leftover, round);
+				break;
+			} else if(choice=='N' || choice=='n'){
+            	break;
+			} else{
+				printf("\nPlease answer with a char Y/N...\n\n");
+				goto end;
+			}
         }
 
-        // Slime's turn
         printf("%s HP: %d\n", enemy, *enemyHP);
         monsterTurn(enemy, playerHP, playerAtk, enemyHP, enemyAtk);
 
@@ -101,7 +149,7 @@ void battle(char player[], char enemy[], int *playerHP, int *playerAtk, int *ene
             printf("You were defeated! %s wins!\n", enemy);
             break;
         }
-        getch(); system("cls");
+        printf("[ENTER]"); getch(); system("cls");
 
         round++;
     }
@@ -112,6 +160,13 @@ int main(){
 	int choiceMenu, choice1, choice2, role;
 	struct Player player;
 	struct Monster monster;
+	
+//	int max=100; //Max Entry
+//	struct Score score[max];
+//	char filename="highscores.txt";
+//	
+//	int numEntries = readData(data, maxEntries, filename);
+	
 //	struct Fighter fighter;
 //	struct Hero hero;
 
@@ -131,8 +186,8 @@ int main(){
 			system("cls");
 			printf("\tWelcome to Simple Fighting Game\n\n");
 			printf("---Main Menu---\n");
-			printf("1) New Game\n");
-			printf("2) Highscore\n");
+			printf("1) Play Game\n");
+//			printf("2) Highscore\n");
 			printf("0) Back\n");
 			printf("Choose your option: "); scanf("%d", &choice1); printf("\n");
 			break;
@@ -148,7 +203,7 @@ int main(){
 	if(choice1==1){
 		system("cls");
 		printf("\tWelcome to Simple Fighting Game\n\n");
-		printf("---NEW GAME---\n");
+		printf("---PLAY GAME---\n");
 		printf("Choose your role:\n");
 		printf("1) Archer\n");
 		printf("2) Fighter\n");
@@ -171,19 +226,19 @@ int main(){
 		case 1:
 			strcpy(player.name, "Archer");
 			player.hp = 75;
-			player.atk = 25;
+			player.atk = 40;
 //			player.spd = 70;
 			break;
 		case 2:
 			strcpy(player.name, "Fighter");
 			player.hp = 120;
-			player.atk = 10;
+			player.atk = 25;
 //			player.spd = 35;
 			break;
 		case 3:
 			strcpy(player.name, "Hero");
 			player.hp = 90;
-			player.atk = 30;
+			player.atk = 35;
 //			player.spd = 60;
 			break;
 		case 0:
@@ -199,14 +254,20 @@ int main(){
 	printf("---GAME START---\n\n");
 	
 	if(role==1){
-		printf("Archer is an agile combatant, relying on his ranged attack and speed to win.\n\n"); getch();
-		printf("This is your warrior stats,\nClass: %s\nHP: %d\nAtk: %d\n", player.name, player.hp, player.atk); getch();
+		printf("Archer is an agile combatant, relying on his ranged attack and speed to win.\n\n"); 
+		printf("[Press ENTER to see stats]"); getch();
+		printf("\n\nThis is your warrior stats,\nClass: %s\nHP: %d\nAtk: %d\n", player.name, player.hp, player.atk); 
+		printf("\n[ENTER]"); getch();
 	} else if(role==2){
-		printf("Fighter is a tanky combatant, relying on his toughness to win.\n\n"); getch();
-		printf("This is your warrior stats,\nClass: %s\nHP: %d\nAtk: %d\n", player.name, player.hp, player.atk); getch();
+		printf("Fighter is a tanky combatant, relying on his toughness to win.\n\n"); 
+		printf("[Press ENTER to see stats]"); getch();
+		printf("\n\nThis is your warrior stats,\nClass: %s\nHP: %d\nAtk: %d\n", player.name, player.hp, player.atk); 
+		printf("\n[ENTER]"); getch();
 	} else {
-		printf("Hero is an all-rounder combatant, relying on both his toughness and speed to win.\n\n"); getch();
-		printf("This is your warrior stats,\nClass: %s\nHP: %d\nAtk: %d\n", player.name, player.hp, player.atk); getch();
+		printf("Hero is an all-rounder combatant, relying on both his toughness and speed to win.\n\n"); 
+		printf("[Press ENTER to see stats]"); getch();
+		printf("\n\nThis is your warrior stats,\nClass: %s\nHP: %d\nAtk: %d\n", player.name, player.hp, player.atk); 
+		printf("\n[ENTER]"); getch();
 	}
 	
 	// This one is an rpg route and it might take too long to finish so we'll choose the alternative where player just fight
@@ -219,7 +280,8 @@ int main(){
 	printf("\n\nChoose your opponent:\n");
 	printf("1) Slime\n");
 	printf("2) Goblin\n");
-	printf("3) Demon\n");
+	printf("3) Orc\n");
+	printf("4) Demon\n");
 	printf("Choose your option: "); scanf("%d", &opponent); printf("\n");
 	
 	switch(opponent){
@@ -236,6 +298,12 @@ int main(){
 //			monster.spd = 45;
 			break;
 		case 3:
+			strcpy(monster.name, "Orc");
+			monster.hp = 90;
+			monster.atk = 30;
+//			monster.spd = 45;
+			break;
+		case 4:
 			strcpy(monster.name, "Demon");
 			monster.hp = 100;
 			monster.atk = 40;
@@ -251,6 +319,7 @@ int main(){
 	
 	system("cls");
 	battle(player.name, monster.name, &player.hp, &player.atk, &monster.hp, &monster.atk);
+	
 //	printf("---Round %d---\n\n", turn);
 //	printf("1) Slime\n");
 //	printf("2) Goblin\n");
